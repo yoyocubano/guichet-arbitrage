@@ -1,29 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, 
   Sparkles, 
   Layers, 
-  ArrowUpRight, 
-  Check, 
-  TrendingUp, 
-  FileText, 
-  Clock, 
-  Plus, 
-  Menu, 
-  X, 
   ChevronRight, 
   Calculator, 
   AlertTriangle,
-  Send,
   Zap,
   Globe,
   Building,
-  HelpCircle,
-  ArrowRight
+  Check,
+  X,
+  ArrowRight,
+  Menu
 } from 'lucide-react';
 
-// Custom Hook for Mouse Position to drive interactive lights
 const useMousePosition = () => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   useEffect(() => {
@@ -72,10 +64,7 @@ const App = () => {
     const baseFee = cnsReceiptsCount * 4;
     const timeSaved = cnsReceiptsCount * 15;
     const premiumMultiplier = cnsServiceTier === 'premium' ? 1.5 : 1.0;
-    setCnsCalc({
-      fee: Math.round(baseFee * premiumMultiplier),
-      timeSaved
-    });
+    setCnsCalc({ fee: Math.round(baseFee * premiumMultiplier), timeSaved });
   }, [cnsReceiptsCount, cnsServiceTier]);
 
   // Update SME Grant Calculator
@@ -104,11 +93,7 @@ const App = () => {
     const potentialSavings = Math.round(Math.min(teleworkDays, limit) * dayRate * 0.15);
     const penaltyRisk = currentOver > 0 ? Math.round(currentOver * dayRate * taxRate * 1.2) : 0;
 
-    setTaxCalc({
-      optimalDays: limit,
-      penaltyRisk,
-      potentialSavings
-    });
+    setTaxCalc({ optimalDays: limit, penaltyRisk, potentialSavings });
   }, [commuteCountry, annualSalary, teleworkDays]);
 
   const handleFormSubmit = (e) => {
@@ -145,6 +130,10 @@ const App = () => {
   return (
     <div className="bg-[#ffffff] text-[#0A1628] min-h-screen selection:bg-[#C9A96E] selection:text-white font-sans overflow-x-hidden relative">
       
+      {/* Ambient background glows for extra visual dynamic depth */}
+      <div className="absolute top-[20%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#C9A96E]/5 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[50%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#0A1628]/5 blur-[120px] pointer-events-none" />
+
       {/* Interactive Cursor Spotlight (Only on Desktop) */}
       <div 
         className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-300 opacity-60 hidden md:block"
@@ -158,7 +147,7 @@ const App = () => {
         <div className="max-w-[1200px] mx-auto px-6 md:px-16 flex justify-between items-center">
           <div className="flex items-center gap-3 cursor-pointer group">
             <div className="w-10 h-10 rounded-sm bg-[#0A1628] flex items-center justify-center border border-[#C9A96E]/40 shadow-sm relative overflow-hidden">
-              <Shield className="text-[#C9A96E] w-5 h-5 relative z-10" />
+              <Shield className="text-[#C9A96E] w-5 h-5 relative z-10 animate-pulse" />
               <div className="absolute inset-0 bg-[#C9A96E] scale-y-0 group-hover:scale-y-100 transition-transform origin-bottom duration-300" />
             </div>
             <div>
@@ -168,26 +157,12 @@ const App = () => {
           </div>
           
           <div className="hidden md:flex items-center gap-10">
-            <a href="#servicios" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors relative group">
-              Servicios
-              <span className="absolute bottom-[-4px] left-0 w-0 h-[1.5px] bg-[#C9A96E] group-hover:w-full transition-all duration-300" />
-            </a>
-            <a href="#proceso" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors relative group">
-              Metodología
-              <span className="absolute bottom-[-4px] left-0 w-0 h-[1.5px] bg-[#C9A96E] group-hover:w-full transition-all duration-300" />
-            </a>
-            <a href="#simulador" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors relative group">
-              Simulador
-              <span className="absolute bottom-[-4px] left-0 w-0 h-[1.5px] bg-[#C9A96E] group-hover:w-full transition-all duration-300" />
-            </a>
-            <a href="#oportunidades" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors relative group">
-              Estrategia
-              <span className="absolute bottom-[-4px] left-0 w-0 h-[1.5px] bg-[#C9A96E] group-hover:w-full transition-all duration-300" />
-            </a>
-            <a href="#precios" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors relative group">
-              Precios
-              <span className="absolute bottom-[-4px] left-0 w-0 h-[1.5px] bg-[#C9A96E] group-hover:w-full transition-all duration-300" />
-            </a>
+            {['servicios', 'proceso', 'simulador', 'oportunidades', 'precios'].map((item) => (
+              <a key={item} href={`#${item}`} className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors relative group">
+                {item === 'proceso' ? 'Metodología' : item.charAt(0).toUpperCase() + item.slice(1)}
+                <span className="absolute bottom-[-4px] left-0 w-0 h-[1.5px] bg-[#C9A96E] group-hover:w-full transition-all duration-300" />
+              </a>
+            ))}
             
             <button 
               onClick={() => setCubanDrawerOpen(true)}
@@ -200,7 +175,7 @@ const App = () => {
             </button>
           </div>
 
-          <button className="md:hidden text-[#0A1628]" onClick={() => setMobileMenuOpen(true)}>
+          <button className="md:hidden text-[#0A1628] p-2" onClick={() => setMobileMenuOpen(true)}>
             <Menu size={24} />
           </button>
         </div>
@@ -217,7 +192,7 @@ const App = () => {
           >
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <Shield className="text-[#C9A96E] w-6 h-6" />
+                <Shield className="text-[#C9A96E] w-6 h-6 animate-pulse" />
                 <span className="font-serif font-bold text-[#0A1628]">MyTramits 352</span>
               </div>
               <button onClick={() => setMobileMenuOpen(false)} className="text-[#0A1628] p-2">
@@ -244,9 +219,9 @@ const App = () => {
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-24 overflow-hidden bg-white">
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0A1628]/55 to-[#0A1628]/90 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0A1628]/55 to-[#0A1628]/95 z-10" />
           <motion.img 
-            initial={{ scale: 1.1 }}
+            initial={{ scale: 1.15 }}
             animate={{ scale: 1.0 }}
             transition={{ duration: 10, ease: 'easeOut' }}
             className="w-full h-full object-cover grayscale brightness-75" 
@@ -265,7 +240,7 @@ const App = () => {
           </motion.div>
           
           <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="font-serif text-4xl md:text-6xl lg:text-7xl max-w-5xl mx-auto leading-[1.1] tracking-tight"
@@ -327,7 +302,7 @@ const App = () => {
           <div className="relative">
             <div className="absolute -inset-4 border border-[#C9A96E]/20 z-0" />
             <motion.img 
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.02, rotate: 0.5 }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               className="relative z-10 w-full h-[550px] object-cover grayscale hover:grayscale-0 transition-all duration-1000 shadow-2xl rounded-sm border border-[#C9A96E]/10" 
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0sbxFtto2qOxAvzCK2lJewHGWeVnz_HvnxQw2kfFfsyMX8vkoUXesRNuyp0NG32VIkcjYMALdkWKeVbll92alyzpnyS5qNm7kfOftusiyYCN0zojMGCRYjMzCfYWUB2WM8aIDefHSbiRl4wnSZXqrlse6jSMxHF9KttU472JzkLNXFrzuJQRXsT3HUcY73Y5RLCOEtrSNtgnZpCPta2CR7acV31rSBfKqDsVAu2fDVI7ib_8r8kltcknqA6tgkeqZpeSkA4LJwVKl"
@@ -345,7 +320,7 @@ const App = () => {
             <h2 className="text-3xl md:text-5xl font-serif text-[#0A1628]">Especialización en el Gran Ducado</h2>
             <div className="w-12 h-0.5 bg-[#C9A96E] mx-auto mt-4" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               { title: "Gestión de Residencia", desc: "Asesoramiento integral y tramitación de permisos de estancia, de llegada y cambios de estatus legal en Luxemburgo." },
               { title: "Registro y Domicilio", desc: "Formalización técnica ante administraciones comunales para registros de llegada y traslados oficiales." },
@@ -358,7 +333,7 @@ const App = () => {
                 key={idx} 
                 whileHover={{ y: -5, borderColor: '#C9A96E' }}
                 transition={{ duration: 0.3 }}
-                className="bg-white p-10 border border-[#E0E0E0] shadow-sm hover:shadow-lg rounded-sm relative overflow-hidden group cursor-pointer"
+                className="bg-white p-8 md:p-10 border border-[#E0E0E0] shadow-sm hover:shadow-lg rounded-sm relative overflow-hidden group cursor-pointer"
               >
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-[#C9A96E] opacity-0 group-hover:opacity-100 transition-opacity" />
                 <h3 className="font-serif text-xl text-[#0A1628] mb-4">{srv.title}</h3>
@@ -379,7 +354,7 @@ const App = () => {
             <span className="text-[10px] tracking-[0.2em] font-bold text-[#C9A96E] uppercase block">METODOLOGÍA</span>
             <h2 className="text-3xl md:text-5xl font-serif text-[#0A1628]">Proceso de Arbitraje Técnico</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative">
             {[
               { step: "01", name: "Diagnóstico", desc: "Evaluación del perfil o requerimientos para determinar la viabilidad burocrática." },
               { step: "02", name: "Planificación", desc: "Definición del roadmap y cronograma de actuación oficial ante organismos públicos." },
@@ -415,7 +390,7 @@ const App = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             {/* Input Panel */}
-            <div className="lg:col-span-7 bg-white p-8 border border-[#E0E0E0] rounded-sm flex flex-col justify-between shadow-sm">
+            <div className="lg:col-span-7 bg-white p-6 md:p-8 border border-[#E0E0E0] rounded-sm flex flex-col justify-between shadow-sm">
               <div className="space-y-8">
                 <div className="flex border-b border-[#E0E0E0] pb-2 overflow-x-auto whitespace-nowrap scrollbar-thin">
                   {['cns', 'sme', 'tax'].map((tab) => (
@@ -462,7 +437,7 @@ const App = () => {
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-[#4A4A4A] uppercase tracking-wider mb-3">Nivel del Servicio</label>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {['basic', 'premium'].map((tier) => (
                             <button 
                               key={tier}
@@ -488,7 +463,7 @@ const App = () => {
                       exit={{ opacity: 0, x: 10 }}
                       className="space-y-6"
                     >
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {[
                           { id: 'digital', name: 'Digital/IT', desc: 'SME Packages' },
                           { id: 'green', name: 'Ambiental', desc: 'Descarbonización' },
@@ -529,7 +504,7 @@ const App = () => {
                       exit={{ opacity: 0, x: 10 }}
                       className="space-y-6"
                     >
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {['FR', 'BE', 'DE'].map((c) => (
                           <button
                             key={c}
@@ -549,7 +524,7 @@ const App = () => {
                           </button>
                         ))}
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-semibold text-[#4A4A4A] uppercase tracking-wider mb-2">Bruto Anual (€)</label>
                           <input 
@@ -576,7 +551,7 @@ const App = () => {
             </div>
 
             {/* Results Panel */}
-            <div className="lg:col-span-5 bg-[#0A1628] text-white p-8 md:p-12 border border-[#C9A96E]/30 rounded-sm flex flex-col justify-between shadow-2xl relative overflow-hidden">
+            <div className="lg:col-span-5 bg-[#0A1628] text-white p-6 md:p-12 border border-[#C9A96E]/30 rounded-sm flex flex-col justify-between shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 bg-[#C9A96E]/10 p-16 text-[#C9A96E]/10 rounded-full blur-3xl animate-pulse" />
               
               <AnimatePresence mode="wait">
@@ -698,7 +673,7 @@ const App = () => {
                 key={idx} 
                 whileHover={{ y: -4, borderColor: '#C9A96E' }}
                 transition={{ duration: 0.3 }}
-                className="p-8 border border-[#E0E0E0] rounded-sm bg-[#f9f9f9] transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
+                className="p-6 md:p-8 border border-[#E0E0E0] rounded-sm bg-[#f9f9f9] transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
               >
                 <span className="font-mono text-[#C9A96E] text-xs font-bold block mb-2">0{idx + 1}</span>
                 <h4 className="font-serif font-bold text-xl text-[#0A1628] mb-3">{op.title}</h4>
@@ -708,31 +683,31 @@ const App = () => {
           </div>
 
           {/* Infographic Strategy Map */}
-          <div className="mt-20 border border-[#C9A96E]/30 bg-[#F7F3EB]/30 p-8 rounded-sm text-center relative overflow-hidden">
+          <div className="mt-20 border border-[#C9A96E]/30 bg-[#F7F3EB]/30 p-6 md:p-8 rounded-sm text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-radial-spotlight opacity-50 pointer-events-none" />
             <h4 className="font-serif font-bold text-xl text-[#0A1628] mb-6 relative z-10">Mapa Estratégico de Arbitraje Local (Gran Ducado)</h4>
-            <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-12 py-6 relative z-10">
+            <div className="flex flex-col lg:flex-row justify-center items-center gap-6 lg:gap-12 py-6 relative z-10 w-full">
               <motion.div 
                 whileHover={{ scale: 1.05 }}
-                className="flex flex-col items-center p-5 bg-white border border-[#E0E0E0] rounded-sm shadow-sm max-w-[220px] transition-all duration-300"
+                className="flex flex-col items-center p-5 bg-white border border-[#E0E0E0] rounded-sm shadow-sm w-full max-w-[280px] transition-all duration-300"
               >
-                <Globe className="w-6 h-6 text-[#C9A96E] mb-3" />
+                <Globe className="w-6 h-6 text-[#C9A96E] mb-3 animate-pulse" />
                 <span className="text-xs font-bold uppercase tracking-wider text-[#0A1628]">1. Portal MyGuichet</span>
                 <p className="text-[10px] text-[#4A4A4A] mt-2 font-light">Punto de acceso seguro y autenticación con firma LuxTrust.</p>
               </motion.div>
-              <div className="w-px h-8 md:w-12 md:h-px bg-[#C9A96E]/50" />
+              <div className="w-px h-8 lg:w-12 lg:h-px bg-[#C9A96E]/50" />
               <motion.div 
                 whileHover={{ scale: 1.05 }}
-                className="flex flex-col items-center p-5 bg-[#0A1628] text-white border border-[#C9A96E]/30 rounded-sm shadow-sm max-w-[220px] transition-all duration-300"
+                className="flex flex-col items-center p-5 bg-[#0A1628] text-white border border-[#C9A96E]/30 rounded-sm shadow-sm w-full max-w-[280px] transition-all duration-300"
               >
                 <Layers className="w-6 h-6 text-[#C9A96E] mb-3" />
                 <span className="text-xs font-bold uppercase tracking-wider text-white">2. Engine MyTramits</span>
                 <p className="text-[10px] text-white/70 mt-2 font-light">Automatización, extracción por IA y estructuración de dossiers.</p>
               </motion.div>
-              <div className="w-px h-8 md:w-12 md:h-px bg-[#C9A96E]/50" />
+              <div className="w-px h-8 lg:w-12 lg:h-px bg-[#C9A96E]/50" />
               <motion.div 
                 whileHover={{ scale: 1.05 }}
-                className="flex flex-col items-center p-5 bg-white border border-[#E0E0E0] rounded-sm shadow-sm max-w-[220px] transition-all duration-300"
+                className="flex flex-col items-center p-5 bg-white border border-[#E0E0E0] rounded-sm shadow-sm w-full max-w-[280px] transition-all duration-300"
               >
                 <Building className="w-6 h-6 text-[#C9A96E] mb-3" />
                 <span className="text-xs font-bold uppercase tracking-wider text-[#0A1628]">3. Organismos Públicos</span>
@@ -755,7 +730,7 @@ const App = () => {
             {/* Plan 1 */}
             <motion.div 
               whileHover={{ y: -5 }}
-              className="bg-white p-12 border border-[#E0E0E0] shadow-sm hover:shadow-xl transition-all rounded-sm flex flex-col justify-between"
+              className="bg-white p-8 md:p-12 border border-[#E0E0E0] shadow-sm hover:shadow-xl transition-all rounded-sm flex flex-col justify-between"
             >
               <div>
                 <h4 className="font-bold text-[10px] text-[#C9A96E] uppercase tracking-[0.18em] mb-6">CONSULTA PUNTUAL</h4>
@@ -781,7 +756,7 @@ const App = () => {
             {/* Plan 2 */}
             <motion.div 
               whileHover={{ scale: 1.02, y: -5 }}
-              className="bg-[#0A1628] p-12 text-white shadow-xl hover:shadow-2xl transition-all rounded-sm relative flex flex-col justify-between border border-[#C9A96E]/20"
+              className="bg-[#0A1628] p-8 md:p-12 text-white shadow-xl hover:shadow-2xl transition-all rounded-sm relative flex flex-col justify-between border border-[#C9A96E]/20"
             >
               <div className="absolute top-0 right-0 bg-[#C9A96E] text-white font-bold text-[9px] px-5 py-2 uppercase tracking-widest">Recomendado</div>
               <div>
@@ -811,7 +786,7 @@ const App = () => {
             {/* Plan 3 */}
             <motion.div 
               whileHover={{ y: -5 }}
-              className="bg-white p-12 border border-[#E0E0E0] shadow-sm hover:shadow-xl transition-all rounded-sm flex flex-col justify-between"
+              className="bg-white p-8 md:p-12 border border-[#E0E0E0] shadow-sm hover:shadow-xl transition-all rounded-sm flex flex-col justify-between"
             >
               <div>
                 <h4 className="font-bold text-[10px] text-[#C9A96E] uppercase tracking-[0.18em] mb-6">PLAN MENSUAL B2B</h4>
