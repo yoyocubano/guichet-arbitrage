@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, 
@@ -14,42 +14,50 @@ import {
   X, 
   ChevronRight, 
   Calculator, 
-  HelpCircle,
-  Download,
   AlertTriangle,
   Send,
   Zap,
   Globe,
   Building,
-  DollarSign,
-  Info,
-  Maximize2
+  HelpCircle,
+  ArrowRight
 } from 'lucide-react';
 
+// Custom Hook for Mouse Position to drive interactive lights
+const useMousePosition = () => {
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+  return mousePos;
+};
+
 const App = () => {
+  const mousePos = useMousePosition();
   const [activeTab, setActiveTab] = useState('cns');
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cubanDrawerOpen, setCubanDrawerOpen] = useState(false);
+  const [activeCase, setActiveCase] = useState(null);
 
   // States for interactive calculators
-  // 1. CNS Auto-Refund State
   const [cnsReceiptsCount, setCnsReceiptsCount] = useState(5);
   const [cnsServiceTier, setCnsServiceTier] = useState('premium');
   const [cnsCalc, setCnsCalc] = useState({ fee: 0, timeSaved: 0 });
 
-  // 2. SME Grants State
   const [grantSector, setGrantSector] = useState('digital');
   const [employeeCount, setEmployeeCount] = useState(12);
   const [smeCalc, setSmeCalc] = useState({ estGrant: 0, successProb: 95 });
 
-  // 3. Transborder Tax State
   const [commuteCountry, setCommuteCountry] = useState('FR');
   const [annualSalary, setAnnualSalary] = useState(65000);
   const [teleworkDays, setTeleworkDays] = useState(25);
   const [taxCalc, setTaxCalc] = useState({ optimalDays: 0, penaltyRisk: 0, potentialSavings: 0 });
 
-  // Contact/Onboarding Form State
   const [formState, setFormState] = useState({ name: '', email: '', phone: '', product: 'cns', details: '' });
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -62,7 +70,7 @@ const App = () => {
   // Update CNS Calculator
   useEffect(() => {
     const baseFee = cnsReceiptsCount * 4;
-    const timeSaved = cnsReceiptsCount * 15; // 15 mins per receipt
+    const timeSaved = cnsReceiptsCount * 15;
     const premiumMultiplier = cnsServiceTier === 'premium' ? 1.5 : 1.0;
     setCnsCalc({
       fee: Math.round(baseFee * premiumMultiplier),
@@ -86,14 +94,14 @@ const App = () => {
 
   // Update Transborder Tax Calculator
   useEffect(() => {
-    let limit = 34; // France limit
+    let limit = 34;
     if (commuteCountry === 'BE') limit = 34;
     if (commuteCountry === 'DE') limit = 19;
 
     const currentOver = Math.max(0, teleworkDays - limit);
-    const taxRate = 0.32; // average tax rate
+    const taxRate = 0.32;
     const dayRate = annualSalary / 220;
-    const potentialSavings = Math.round(Math.min(teleworkDays, limit) * dayRate * 0.15); // Tax benefit
+    const potentialSavings = Math.round(Math.min(teleworkDays, limit) * dayRate * 0.15);
     const penaltyRisk = currentOver > 0 ? Math.round(currentOver * dayRate * taxRate * 1.2) : 0;
 
     setTaxCalc({
@@ -135,33 +143,60 @@ const App = () => {
   ];
 
   return (
-    <div className="bg-[#ffffff] text-[#0A1628] min-h-screen selection:bg-[#C9A96E] selection:text-white font-sans overflow-x-hidden">
+    <div className="bg-[#ffffff] text-[#0A1628] min-h-screen selection:bg-[#C9A96E] selection:text-white font-sans overflow-x-hidden relative">
       
+      {/* Interactive Cursor Spotlight (Only on Desktop) */}
+      <div 
+        className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-300 opacity-60 hidden md:block"
+        style={{
+          background: `radial-gradient(circle 350px at ${mousePos.x}px ${mousePos.y}px, rgba(201, 169, 110, 0.07), transparent 80%)`
+        }}
+      />
+
       {/* TopNavBar */}
-      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 border-b border-[#C9A96E]/10 ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg py-4' : 'bg-transparent py-6'}`}>
+      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 border-b border-[#C9A96E]/10 ${isScrolled ? 'bg-white/90 backdrop-blur-xl shadow-lg py-3' : 'bg-transparent py-6'}`}>
         <div className="max-w-[1200px] mx-auto px-6 md:px-16 flex justify-between items-center">
           <div className="flex items-center gap-3 cursor-pointer group">
-            <div className="w-10 h-10 rounded-sm bg-gradient-to-br from-[#0A1628] to-[#1a2d48] flex items-center justify-center border border-[#C9A96E]/40 shadow-sm transition-transform duration-500 group-hover:rotate-12">
-              <Shield className="text-[#C9A96E] w-5 h-5" />
+            <div className="w-10 h-10 rounded-sm bg-[#0A1628] flex items-center justify-center border border-[#C9A96E]/40 shadow-sm relative overflow-hidden">
+              <Shield className="text-[#C9A96E] w-5 h-5 relative z-10" />
+              <div className="absolute inset-0 bg-[#C9A96E] scale-y-0 group-hover:scale-y-100 transition-transform origin-bottom duration-300" />
             </div>
             <div>
-              <span className="font-serif font-bold text-lg tracking-tight text-[#0A1628] block">MyTramits</span>
+              <span className="font-serif font-bold text-lg tracking-tight text-[#0A1628] block group-hover:text-[#C9A96E] transition-colors">MyTramits</span>
               <span className="text-[10px] text-[#C9A96E] tracking-[0.35em] uppercase font-bold block -mt-1">&nbsp;&nbsp;352</span>
             </div>
           </div>
           
           <div className="hidden md:flex items-center gap-10">
-            <a href="#servicios" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors">Servicios</a>
-            <a href="#proceso" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors">Metodología</a>
-            <a href="#simulador" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors">Simulador</a>
-            <a href="#oportunidades" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors">Estrategia</a>
-            <a href="#precios" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors">Precios</a>
+            <a href="#servicios" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors relative group">
+              Servicios
+              <span className="absolute bottom-[-4px] left-0 w-0 h-[1.5px] bg-[#C9A96E] group-hover:w-full transition-all duration-300" />
+            </a>
+            <a href="#proceso" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors relative group">
+              Metodología
+              <span className="absolute bottom-[-4px] left-0 w-0 h-[1.5px] bg-[#C9A96E] group-hover:w-full transition-all duration-300" />
+            </a>
+            <a href="#simulador" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors relative group">
+              Simulador
+              <span className="absolute bottom-[-4px] left-0 w-0 h-[1.5px] bg-[#C9A96E] group-hover:w-full transition-all duration-300" />
+            </a>
+            <a href="#oportunidades" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors relative group">
+              Estrategia
+              <span className="absolute bottom-[-4px] left-0 w-0 h-[1.5px] bg-[#C9A96E] group-hover:w-full transition-all duration-300" />
+            </a>
+            <a href="#precios" className="font-semibold text-[11px] uppercase tracking-widest text-[#4A4A4A] hover:text-[#C9A96E] transition-colors relative group">
+              Precios
+              <span className="absolute bottom-[-4px] left-0 w-0 h-[1.5px] bg-[#C9A96E] group-hover:w-full transition-all duration-300" />
+            </a>
             
             <button 
               onClick={() => setCubanDrawerOpen(true)}
-              className="border border-[#C9A96E] text-[#0A1628] hover:bg-[#C9A96E] hover:text-white px-5 py-2.5 font-semibold text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center gap-2 rounded-sm"
+              className="relative overflow-hidden border border-[#C9A96E] text-[#0A1628] hover:text-white px-5 py-2.5 font-semibold text-[10px] uppercase tracking-widest transition-colors duration-300 rounded-sm group/btn"
             >
-              <Zap className="w-3.5 h-3.5 text-[#C9A96E] hover:text-white" /> Explicación Cubana
+              <span className="absolute inset-0 bg-[#C9A96E] translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-out" />
+              <span className="relative z-10 flex items-center gap-2">
+                <Zap className="w-3.5 h-3.5 text-[#C9A96E] group-hover/btn:text-white transition-colors" /> Explicación Cubana
+              </span>
             </button>
           </div>
 
@@ -209,45 +244,57 @@ const App = () => {
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-24 overflow-hidden bg-white">
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0A1628]/45 to-[#0A1628]/85 z-10"></div>
-          <img 
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0A1628]/55 to-[#0A1628]/90 z-10" />
+          <motion.img 
+            initial={{ scale: 1.1 }}
+            animate={{ scale: 1.0 }}
+            transition={{ duration: 10, ease: 'easeOut' }}
             className="w-full h-full object-cover grayscale brightness-75" 
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuBf3w2DpevpIgzpg3VxMXyZTrWOkvtJ-TP6ynE986XaZpNyADaJA2lL5KP6RGq56u21bY1bM63PPRcyzJHvAEXwIQ_tPPERowouNDWRCW3I9jO0mg3-jcfpL2DXgz5KbFUu5m1gD7dhSNIbg_ElHhboEbJIgykvBeOILRw4u9IG8esz2ioWQ9SWForrrTmMS848vApDG1G5nrnYDZDy5n_8HQeBDBZPPiUFmTZnKPWj_CSvtwhrnPgdcbQ7FWyROnAOVIF80CGbFN1V"
             alt="Luxembourg City Aerial" 
           />
         </div>
         <div className="relative z-20 max-w-[1200px] mx-auto px-6 md:px-16 text-center text-white space-y-8">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#C9A96E]/50 bg-[#C9A96E]/10 text-[#C9A96E] text-[10px] tracking-widest uppercase font-bold mx-auto">
-            <Sparkles className="w-3.5 h-3.5" /> Quiet Luxury en Gestión de Arbitraje
-          </div>
-          <h1 className="font-serif text-4xl md:text-6xl lg:text-7xl max-w-5xl mx-auto leading-[1.1] tracking-tight">
+          <motion.div 
+            initial={{ opacity: 0, y: -15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#C9A96E]/50 bg-[#C9A96E]/10 text-[#C9A96E] text-[10px] tracking-widest uppercase font-bold mx-auto"
+          >
+            <Sparkles className="w-3.5 h-3.5 animate-spin-slow" /> Quiet Luxury en Gestión de Arbitraje
+          </motion.div>
+          
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="font-serif text-4xl md:text-6xl lg:text-7xl max-w-5xl mx-auto leading-[1.1] tracking-tight"
+          >
             Gestión administrativa en Luxemburgo con rigor, discreción y arbitraje experto.
-          </h1>
-          <p className="text-lg md:text-xl max-w-3xl mx-auto text-white/80 font-light leading-relaxed">
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-lg md:text-xl max-w-3xl mx-auto text-white/80 font-light leading-relaxed"
+          >
             Soporte estratégico y automatización inteligente del portal MyGuichet.lu para profesionales y patrimonios internacionales.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-            <a href="#simulador" className="bg-[#C9A96E] text-white hover:brightness-110 font-bold px-10 py-4.5 rounded-sm text-xs uppercase tracking-widest transition-all duration-300">
+          </motion.p>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center pt-6"
+          >
+            <a href="#simulador" className="bg-[#C9A96E] text-white hover:brightness-110 font-bold px-10 py-4.5 rounded-sm text-xs uppercase tracking-widest transition-all duration-300 shadow-md">
               Calcular Retornos
             </a>
             <a href="#servicios" className="border border-white/30 text-white hover:bg-white hover:text-black font-bold px-10 py-4.5 rounded-sm text-xs uppercase tracking-widest transition-all duration-300">
               Explorar Servicios
             </a>
-          </div>
-          <div className="flex flex-wrap justify-center gap-12 md:gap-16 opacity-75 pt-10 text-white/80">
-            <div className="flex items-center gap-2">
-              <Check className="text-[#C9A96E] w-4 h-4" />
-              <span className="text-[10px] uppercase tracking-widest font-bold">100% Confidencial</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="text-[#C9A96E] w-4 h-4" />
-              <span className="text-[10px] uppercase tracking-widest font-bold">Rigor Institucional</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="text-[#C9A96E] w-4 h-4" />
-              <span className="text-[10px] uppercase tracking-widest font-bold">Excelencia Acreditada</span>
-            </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -262,14 +309,14 @@ const App = () => {
             </p>
             <div className="space-y-6 pt-4">
               <div className="flex gap-4">
-                <div className="shrink-0 w-px h-12 bg-[#C9A96E]/40"></div>
+                <div className="shrink-0 w-px h-12 bg-[#C9A96E]/40" />
                 <div>
                   <h4 className="text-xs uppercase tracking-widest text-[#C9A96E] font-bold mb-1">Seguridad Jurídica</h4>
                   <p className="text-white/60 text-xs">Garantizamos que cada expediente cumpla estrictamente con los requisitos actuales de MyGuichet.</p>
                 </div>
               </div>
               <div className="flex gap-4">
-                <div className="shrink-0 w-px h-12 bg-[#C9A96E]/40"></div>
+                <div className="shrink-0 w-px h-12 bg-[#C9A96E]/40" />
                 <div>
                   <h4 className="text-xs uppercase tracking-widest text-[#C9A96E] font-bold mb-1">Discreción Absoluta</h4>
                   <p className="text-white/60 text-xs">Tratamiento confidencial de su información personal y corporativa bajo estándares premium.</p>
@@ -278,8 +325,10 @@ const App = () => {
             </div>
           </div>
           <div className="relative">
-            <div className="absolute -inset-4 border border-[#C9A96E]/20 z-0"></div>
-            <img 
+            <div className="absolute -inset-4 border border-[#C9A96E]/20 z-0" />
+            <motion.img 
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               className="relative z-10 w-full h-[550px] object-cover grayscale hover:grayscale-0 transition-all duration-1000 shadow-2xl rounded-sm border border-[#C9A96E]/10" 
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0sbxFtto2qOxAvzCK2lJewHGWeVnz_HvnxQw2kfFfsyMX8vkoUXesRNuyp0NG32VIkcjYMALdkWKeVbll92alyzpnyS5qNm7kfOftusiyYCN0zojMGCRYjMzCfYWUB2WM8aIDefHSbiRl4wnSZXqrlse6jSMxHF9KttU472JzkLNXFrzuJQRXsT3HUcY73Y5RLCOEtrSNtgnZpCPta2CR7acV31rSBfKqDsVAu2fDVI7ib_8r8kltcknqA6tgkeqZpeSkA4LJwVKl"
               alt="Luxembourg Office"
@@ -294,7 +343,7 @@ const App = () => {
           <div className="text-center mb-20 space-y-4">
             <span className="text-[10px] tracking-[0.2em] font-bold text-[#C9A96E] uppercase block">PORTFOLIO DE SERVICIOS</span>
             <h2 className="text-3xl md:text-5xl font-serif text-[#0A1628]">Especialización en el Gran Ducado</h2>
-            <div className="w-12 h-0.5 bg-[#C9A96E] mx-auto mt-4"></div>
+            <div className="w-12 h-0.5 bg-[#C9A96E] mx-auto mt-4" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
@@ -305,14 +354,19 @@ const App = () => {
               { title: "Servicios Educativos", desc: "Gestión de plazas en el sistema de enseñanza pública y privada luxemburguesa para menores." },
               { title: "Legalización Técnica", desc: "Tratamiento oficial de apostillas y validación de documentación extranjera ante el Ministerio (MAEE)." }
             ].map((srv, idx) => (
-              <div key={idx} className="bg-white p-10 border border-[#E0E0E0] hover:border-[#C9A96E]/50 transition-all duration-500 shadow-sm hover:shadow-md rounded-sm relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#C9A96E] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <motion.div 
+                key={idx} 
+                whileHover={{ y: -5, borderColor: '#C9A96E' }}
+                transition={{ duration: 0.3 }}
+                className="bg-white p-10 border border-[#E0E0E0] shadow-sm hover:shadow-lg rounded-sm relative overflow-hidden group cursor-pointer"
+              >
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#C9A96E] opacity-0 group-hover:opacity-100 transition-opacity" />
                 <h3 className="font-serif text-xl text-[#0A1628] mb-4">{srv.title}</h3>
                 <p className="text-sm text-[#4A4A4A] leading-relaxed mb-6 font-light">{srv.desc}</p>
                 <a href="#contacto" className="text-[10px] font-bold text-[#0A1628] hover:text-[#C9A96E] uppercase tracking-widest transition-colors flex items-center gap-1.5">
                   Consultar Detalles <ChevronRight className="w-3.5 h-3.5" />
                 </a>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -332,13 +386,20 @@ const App = () => {
               { step: "03", name: "Gestión", desc: "Diligencia y monitorización activa del trámite en MyGuichet y oficinas de gobierno." },
               { step: "04", name: "Resolución", desc: "Entrega de documentos oficiales, reembolsos o subsidios debidamente consolidados." }
             ].map((p, idx) => (
-              <div key={idx} className="space-y-4">
-                <div className="w-16 h-16 border border-[#C9A96E]/30 flex items-center justify-center text-xl font-bold text-[#C9A96E] rounded-sm bg-[#F7F3EB]">
+              <motion.div 
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.15 }}
+                className="space-y-4"
+              >
+                <div className="w-16 h-16 border border-[#C9A96E]/30 flex items-center justify-center text-xl font-bold text-[#C9A96E] rounded-sm bg-[#F7F3EB] transition-colors duration-500 hover:bg-[#C9A96E] hover:text-white">
                   {p.step}
                 </div>
                 <h4 className="font-serif font-bold text-lg text-[#0A1628]">{p.name}</h4>
                 <p className="text-[#4A4A4A] text-sm leading-relaxed font-light">{p.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -357,231 +418,266 @@ const App = () => {
             <div className="lg:col-span-7 bg-white p-8 border border-[#E0E0E0] rounded-sm flex flex-col justify-between shadow-sm">
               <div className="space-y-8">
                 <div className="flex border-b border-[#E0E0E0] pb-2 overflow-x-auto whitespace-nowrap scrollbar-thin">
-                  <button 
-                    onClick={() => setActiveTab('cns')}
-                    className={`pb-4 px-2 text-xs uppercase tracking-widest font-bold transition-all relative ${activeTab === 'cns' ? 'text-[#C9A96E]' : 'text-neutral-400 hover:text-[#0A1628]'}`}
-                  >
-                    1. Reembolsos CNS
-                    {activeTab === 'cns' && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A96E]"></span>}
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('sme')}
-                    className={`pb-4 px-6 text-xs uppercase tracking-widest font-bold transition-all relative ${activeTab === 'sme' ? 'text-[#C9A96E]' : 'text-neutral-400 hover:text-[#0A1628]'}`}
-                  >
-                    2. Ayudas Digitalización (SME)
-                    {activeTab === 'sme' && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A96E]"></span>}
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('tax')}
-                    className={`pb-4 px-2 text-xs uppercase tracking-widest font-bold transition-all relative ${activeTab === 'tax' ? 'text-[#C9A96E]' : 'text-neutral-400 hover:text-[#0A1628]'}`}
-                  >
-                    3. Escudo Transfronterizo
-                    {activeTab === 'tax' && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A96E]"></span>}
-                  </button>
+                  {['cns', 'sme', 'tax'].map((tab) => (
+                    <button 
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`pb-4 px-4 text-xs uppercase tracking-widest font-bold transition-all relative ${activeTab === tab ? 'text-[#C9A96E]' : 'text-neutral-400 hover:text-[#0A1628]'}`}
+                    >
+                      {tab === 'cns' && '1. Reembolsos CNS'}
+                      {tab === 'sme' && '2. Ayudas Digitalización (SME)'}
+                      {tab === 'tax' && '3. Escudo Transfronterizo'}
+                      {activeTab === tab && (
+                        <motion.span 
+                          layoutId="activeBorder"
+                          className="absolute bottom-0 left-0 w-full h-[2px] bg-[#C9A96E]" 
+                        />
+                      )}
+                    </button>
+                  ))}
                 </div>
 
-                {activeTab === 'cns' && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                    <div>
-                      <div className="flex justify-between items-center mb-3">
-                        <label className="text-xs font-semibold text-[#4A4A4A] uppercase tracking-wider">Facturas Médicas / Trimestre</label>
-                        <span className="text-sm font-bold text-[#0A1628]">{cnsReceiptsCount} facturas</span>
+                <AnimatePresence mode="wait">
+                  {activeTab === 'cns' && (
+                    <motion.div 
+                      key="cns-tab"
+                      initial={{ opacity: 0, x: -10 }} 
+                      animate={{ opacity: 1, x: 0 }} 
+                      exit={{ opacity: 0, x: 10 }}
+                      className="space-y-6"
+                    >
+                      <div>
+                        <div className="flex justify-between items-center mb-3">
+                          <label className="text-xs font-semibold text-[#4A4A4A] uppercase tracking-wider">Facturas Médicas / Trimestre</label>
+                          <span className="text-sm font-bold text-[#0A1628]">{cnsReceiptsCount} facturas</span>
+                        </div>
+                        <input 
+                          type="range" 
+                          min="1" 
+                          max="30" 
+                          value={cnsReceiptsCount}
+                          onChange={(e) => setCnsReceiptsCount(parseInt(e.target.value))}
+                          className="w-full h-1 bg-[#E0E0E0] rounded-lg appearance-none cursor-pointer accent-[#C9A96E]"
+                        />
                       </div>
-                      <input 
-                        type="range" 
-                        min="1" 
-                        max="30" 
-                        value={cnsReceiptsCount}
-                        onChange={(e) => setCnsReceiptsCount(parseInt(e.target.value))}
-                        className="w-full h-1 bg-[#E0E0E0] rounded-lg appearance-none cursor-pointer accent-[#C9A96E]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-[#4A4A4A] uppercase tracking-wider mb-3">Nivel del Servicio</label>
+                      <div>
+                        <label className="block text-xs font-semibold text-[#4A4A4A] uppercase tracking-wider mb-3">Nivel del Servicio</label>
+                        <div className="grid grid-cols-2 gap-4">
+                          {['basic', 'premium'].map((tier) => (
+                            <button 
+                              key={tier}
+                              onClick={() => setCnsServiceTier(tier)}
+                              className={`p-4 rounded-sm border text-left transition-all ${cnsServiceTier === tier ? 'bg-[#F7F3EB] border-[#C9A96E] text-[#0A1628]' : 'bg-[#f9f9f9] border-[#E0E0E0] text-[#4A4A4A] hover:border-[#C9A96E]/50'}`}
+                            >
+                              <h4 className="text-xs font-bold uppercase tracking-wider">{tier === 'basic' ? 'Envío Asistido' : 'Concierge Premium'}</h4>
+                              <p className="text-[10px] text-[#4A4A4A]/70 mt-1">
+                                {tier === 'basic' ? 'Preparamos el sobre físico CNS y las etiquetas oficiales.' : 'Sincronización LuxTrust + Control automatizado de depósitos.'}
+                              </p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === 'sme' && (
+                    <motion.div 
+                      key="sme-tab"
+                      initial={{ opacity: 0, x: -10 }} 
+                      animate={{ opacity: 1, x: 0 }} 
+                      exit={{ opacity: 0, x: 10 }}
+                      className="space-y-6"
+                    >
+                      <div className="grid grid-cols-3 gap-4">
+                        {[
+                          { id: 'digital', name: 'Digital/IT', desc: 'SME Packages' },
+                          { id: 'green', name: 'Ambiental', desc: 'Descarbonización' },
+                          { id: 'innovation', name: 'I+D', desc: 'Patentes/Subsidio' }
+                        ].map((sec) => (
+                          <button
+                            key={sec.id}
+                            onClick={() => setGrantSector(sec.id)}
+                            className={`p-4 rounded-sm border text-left transition-all ${grantSector === sec.id ? 'bg-[#F7F3EB] border-[#C9A96E] text-[#0A1628]' : 'bg-[#f9f9f9] border-[#E0E0E0] text-[#4A4A4A] hover:border-[#C9A96E]/50'}`}
+                          >
+                            <h4 className="text-xs font-bold uppercase tracking-wider">{sec.name}</h4>
+                            <p className="text-[9px] text-[#4A4A4A]/70 mt-1">{sec.desc}</p>
+                          </button>
+                        ))}
+                      </div>
+                      <div>
+                        <div className="flex justify-between items-center mb-3">
+                          <label className="text-xs font-semibold text-[#4A4A4A] uppercase tracking-wider">Empleados Equivalentes (FTE)</label>
+                          <span className="text-sm font-bold text-[#0A1628]">{employeeCount} FTE</span>
+                        </div>
+                        <input 
+                          type="range" 
+                          min="1" 
+                          max="100" 
+                          value={employeeCount}
+                          onChange={(e) => setEmployeeCount(parseInt(e.target.value))}
+                          className="w-full h-1 bg-[#E0E0E0] rounded-lg appearance-none cursor-pointer accent-[#C9A96E]"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === 'tax' && (
+                    <motion.div 
+                      key="tax-tab"
+                      initial={{ opacity: 0, x: -10 }} 
+                      animate={{ opacity: 1, x: 0 }} 
+                      exit={{ opacity: 0, x: 10 }}
+                      className="space-y-6"
+                    >
+                      <div className="grid grid-cols-3 gap-4">
+                        {['FR', 'BE', 'DE'].map((c) => (
+                          <button
+                            key={c}
+                            onClick={() => setCommuteCountry(c)}
+                            className={`p-4 rounded-sm border text-left transition-all ${commuteCountry === c ? 'bg-[#F7F3EB] border-[#C9A96E] text-[#0A1628]' : 'bg-[#f9f9f9] border-[#E0E0E0] text-[#4A4A4A] hover:border-[#C9A96E]/50'}`}
+                          >
+                            <h4 className="text-xs font-bold uppercase tracking-wider">
+                              {c === 'FR' && 'Francia'}
+                              {c === 'BE' && 'Bélgica'}
+                              {c === 'DE' && 'Alemania'}
+                            </h4>
+                            <span className="text-[10px] text-[#4A4A4A]/70 block mt-1">
+                              {c === 'FR' && '34 Días'}
+                              {c === 'BE' && '34 Días'}
+                              {c === 'DE' && '19 Días'}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                       <div className="grid grid-cols-2 gap-4">
-                        <button 
-                          onClick={() => setCnsServiceTier('basic')}
-                          className={`p-4 rounded-sm border text-left transition-all ${cnsServiceTier === 'basic' ? 'bg-[#F7F3EB] border-[#C9A96E] text-[#0A1628]' : 'bg-[#f9f9f9] border-[#E0E0E0] text-[#4A4A4A] hover:border-[#C9A96E]/50'}`}
-                        >
-                          <h4 className="text-xs font-bold uppercase tracking-wider">Envío Asistido</h4>
-                          <p className="text-[10px] text-[#4A4A4A]/70 mt-1">Preparamos el sobre físico CNS y las etiquetas oficiales.</p>
-                        </button>
-                        <button 
-                          onClick={() => setCnsServiceTier('premium')}
-                          className={`p-4 rounded-sm border text-left transition-all ${cnsServiceTier === 'premium' ? 'bg-[#F7F3EB] border-[#C9A96E] text-[#0A1628]' : 'bg-[#f9f9f9] border-[#E0E0E0] text-[#4A4A4A] hover:border-[#C9A96E]/50'}`}
-                        >
-                          <h4 className="text-xs font-bold uppercase tracking-wider">Concierge Premium</h4>
-                          <p className="text-[10px] text-[#4A4A4A]/70 mt-1">Sincronización LuxTrust + Control automatizado de depósitos.</p>
-                        </button>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#4A4A4A] uppercase tracking-wider mb-2">Bruto Anual (€)</label>
+                          <input 
+                            type="number" 
+                            value={annualSalary}
+                            onChange={(e) => setAnnualSalary(parseInt(e.target.value) || 0)}
+                            className="w-full bg-[#f9f9f9] border border-[#E0E0E0] rounded-sm px-4 py-3 text-xs text-[#0A1628] focus:outline-none focus:border-[#C9A96E] transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#4A4A4A] uppercase tracking-wider mb-2">Días de Teletrabajo</label>
+                          <input 
+                            type="number" 
+                            value={teleworkDays}
+                            onChange={(e) => setTeleworkDays(parseInt(e.target.value) || 0)}
+                            className="w-full bg-[#f9f9f9] border border-[#E0E0E0] rounded-sm px-4 py-3 text-xs text-[#0A1628] focus:outline-none focus:border-[#C9A96E] transition-colors"
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {activeTab === 'sme' && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                    <div className="grid grid-cols-3 gap-4">
-                      {[
-                        { id: 'digital', name: 'Digital/IT', desc: 'SME Packages' },
-                        { id: 'green', name: 'Ambiental', desc: 'Descarbonización' },
-                        { id: 'innovation', name: 'I+D', desc: 'Patentes/Subsidio' }
-                      ].map((sec) => (
-                        <button
-                          key={sec.id}
-                          onClick={() => setGrantSector(sec.id)}
-                          className={`p-4 rounded-sm border text-left transition-all ${grantSector === sec.id ? 'bg-[#F7F3EB] border-[#C9A96E] text-[#0A1628]' : 'bg-[#f9f9f9] border-[#E0E0E0] text-[#4A4A4A] hover:border-[#C9A96E]/50'}`}
-                        >
-                          <h4 className="text-xs font-bold uppercase tracking-wider">{sec.name}</h4>
-                          <p className="text-[9px] text-[#4A4A4A]/70 mt-1">{sec.desc}</p>
-                        </button>
-                      ))}
-                    </div>
-                    <div>
-                      <div className="flex justify-between items-center mb-3">
-                        <label className="text-xs font-semibold text-[#4A4A4A] uppercase tracking-wider">Empleados Equivalentes (FTE)</label>
-                        <span className="text-sm font-bold text-[#0A1628]">{employeeCount} FTE</span>
-                      </div>
-                      <input 
-                        type="range" 
-                        min="1" 
-                        max="100" 
-                        value={employeeCount}
-                        onChange={(e) => setEmployeeCount(parseInt(e.target.value))}
-                        className="w-full h-1 bg-[#E0E0E0] rounded-lg appearance-none cursor-pointer accent-[#C9A96E]"
-                      />
-                    </div>
-                  </motion.div>
-                )}
-
-                {activeTab === 'tax' && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                    <div className="grid grid-cols-3 gap-4">
-                      {['FR', 'BE', 'DE'].map((c) => (
-                        <button
-                          key={c}
-                          onClick={() => setCommuteCountry(c)}
-                          className={`p-4 rounded-sm border text-left transition-all ${commuteCountry === c ? 'bg-[#F7F3EB] border-[#C9A96E] text-[#0A1628]' : 'bg-[#f9f9f9] border-[#E0E0E0] text-[#4A4A4A] hover:border-[#C9A96E]/50'}`}
-                        >
-                          <h4 className="text-xs font-bold uppercase tracking-wider">
-                            {c === 'FR' && 'Francia'}
-                            {c === 'BE' && 'Bélgica'}
-                            {c === 'DE' && 'Alemania'}
-                          </h4>
-                          <span className="text-[10px] text-[#4A4A4A]/70 block mt-1">
-                            {c === 'FR' && '34 Días'}
-                            {c === 'BE' && '34 Días'}
-                            {c === 'DE' && '19 Días'}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-[#4A4A4A] uppercase tracking-wider mb-2">Bruto Anual (€)</label>
-                        <input 
-                          type="number" 
-                          value={annualSalary}
-                          onChange={(e) => setAnnualSalary(parseInt(e.target.value) || 0)}
-                          className="w-full bg-[#f9f9f9] border border-[#E0E0E0] rounded-sm px-4 py-3 text-xs text-[#0A1628] focus:outline-none focus:border-[#C9A96E]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-[#4A4A4A] uppercase tracking-wider mb-2">Días de Teletrabajo</label>
-                        <input 
-                          type="number" 
-                          value={teleworkDays}
-                          onChange={(e) => setTeleworkDays(parseInt(e.target.value) || 0)}
-                          className="w-full bg-[#f9f9f9] border border-[#E0E0E0] rounded-sm px-4 py-3 text-xs text-[#0A1628] focus:outline-none focus:border-[#C9A96E]"
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
             {/* Results Panel */}
-            <div className="lg:col-span-5 bg-[#0A1628] text-white p-8 md:p-12 border border-[#C9A96E]/30 rounded-sm flex flex-col justify-between shadow-lg relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-[#C9A96E]/10 p-12 text-[#C9A96E]/10 rounded-full blur-2xl"></div>
-              {activeTab === 'cns' && (
-                <div className="space-y-6 relative z-10">
-                  <div className="flex items-center gap-2 text-[#C9A96E] text-xs font-bold uppercase tracking-widest">
-                    <Calculator className="w-4 h-4" />
-                    <span>Resumen CNS Refund</span>
-                  </div>
-                  <div className="space-y-4 pt-4">
-                    <div className="flex justify-between text-xs text-white/70">
-                      <span>Tarifa del Servicio</span>
-                      <span className="font-semibold text-white">€{cnsCalc.fee} / trimestre</span>
+            <div className="lg:col-span-5 bg-[#0A1628] text-white p-8 md:p-12 border border-[#C9A96E]/30 rounded-sm flex flex-col justify-between shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-[#C9A96E]/10 p-16 text-[#C9A96E]/10 rounded-full blur-3xl animate-pulse" />
+              
+              <AnimatePresence mode="wait">
+                {activeTab === 'cns' && (
+                  <motion.div 
+                    key="cns-res"
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    exit={{ opacity: 0 }}
+                    className="space-y-6 relative z-10"
+                  >
+                    <div className="flex items-center gap-2 text-[#C9A96E] text-xs font-bold uppercase tracking-widest">
+                      <Calculator className="w-4 h-4" />
+                      <span>Resumen CNS Refund</span>
                     </div>
-                    <div className="flex justify-between text-xs text-white/70">
-                      <span>Tiempo Ahorrado</span>
-                      <span className="font-bold text-[#C9A96E]">{cnsCalc.timeSaved} Minutos</span>
+                    <div className="space-y-4 pt-4">
+                      <div className="flex justify-between text-xs text-white/70">
+                        <span>Tarifa del Servicio</span>
+                        <span className="font-semibold text-white">€{cnsCalc.fee} / trimestre</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-white/70">
+                        <span>Tiempo Ahorrado</span>
+                        <span className="font-bold text-[#C9A96E]">{cnsCalc.timeSaved} Minutos</span>
+                      </div>
+                      <div className="border-t border-white/10 pt-4">
+                        <span className="text-[10px] text-white/40 block uppercase tracking-wider">Canal Oficial CNS</span>
+                        <span className="text-2xl font-serif text-white mt-1 block">4 Semanas Fast-Track</span>
+                      </div>
                     </div>
-                    <div className="border-t border-white/10 pt-4">
-                      <span className="text-[10px] text-white/40 block uppercase tracking-wider">Canal Oficial CNS</span>
-                      <span className="text-2xl font-serif text-white mt-1 block">4 Semanas Fast-Track</span>
-                    </div>
-                  </div>
-                  <a href="#contacto" className="w-full bg-[#C9A96E] hover:bg-white text-black font-bold py-4 rounded-sm block text-center text-xs uppercase tracking-widest transition-all duration-300 mt-8">
-                    Solicitar Gestión
-                  </a>
-                </div>
-              )}
+                    <a href="#contacto" className="w-full bg-[#C9A96E] hover:bg-white text-black font-bold py-4 rounded-sm block text-center text-xs uppercase tracking-widest transition-all duration-300 mt-8 shadow-md">
+                      Solicitar Gestión
+                    </a>
+                  </motion.div>
+                )}
 
-              {activeTab === 'sme' && (
-                <div className="space-y-6 relative z-10">
-                  <div className="flex items-center gap-2 text-[#C9A96E] text-xs font-bold uppercase tracking-widest">
-                    <Calculator className="w-4 h-4" />
-                    <span>Resumen de Ayuda PyMEs</span>
-                  </div>
-                  <div className="space-y-4 pt-4">
-                    <div className="flex justify-between text-xs text-white/70">
-                      <span>Subsidio Proyectado</span>
-                      <span className="font-bold text-white text-base">€{smeCalc.estGrant}</span>
+                {activeTab === 'sme' && (
+                  <motion.div 
+                    key="sme-res"
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    exit={{ opacity: 0 }}
+                    className="space-y-6 relative z-10"
+                  >
+                    <div className="flex items-center gap-2 text-[#C9A96E] text-xs font-bold uppercase tracking-widest">
+                      <Calculator className="w-4 h-4" />
+                      <span>Resumen de Ayuda PyMEs</span>
                     </div>
-                    <div className="flex justify-between text-xs text-white/70">
-                      <span>Viabilidad del Expediente</span>
-                      <span className="font-bold text-emerald-400">{smeCalc.successProb}% de Aprobación</span>
+                    <div className="space-y-4 pt-4">
+                      <div className="flex justify-between text-xs text-white/70">
+                        <span>Subsidio Proyectado</span>
+                        <span className="font-bold text-white text-base">€{smeCalc.estGrant}</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-white/70">
+                        <span>Viabilidad del Expediente</span>
+                        <span className="font-bold text-emerald-400">{smeCalc.successProb}% de Aprobación</span>
+                      </div>
+                      <div className="border-t border-white/10 pt-4">
+                        <span className="text-[10px] text-white/40 block uppercase tracking-wider">Tarifa de Tramitación</span>
+                        <span className="text-xl font-serif text-white mt-1 block">10% Success Fee</span>
+                      </div>
                     </div>
-                    <div className="border-t border-white/10 pt-4">
-                      <span className="text-[10px] text-white/40 block uppercase tracking-wider">Tarifa de Tramitación</span>
-                      <span className="text-xl font-serif text-white mt-1 block">10% Success Fee</span>
-                    </div>
-                  </div>
-                  <a href="#contacto" className="w-full bg-[#C9A96E] hover:bg-white text-black font-bold py-4 rounded-sm block text-center text-xs uppercase tracking-widest transition-all duration-300 mt-8">
-                    Solicitar Gestión
-                  </a>
-                </div>
-              )}
+                    <a href="#contacto" className="w-full bg-[#C9A96E] hover:bg-white text-black font-bold py-4 rounded-sm block text-center text-xs uppercase tracking-widest transition-all duration-300 mt-8 shadow-md">
+                      Solicitar Gestión
+                    </a>
+                  </motion.div>
+                )}
 
-              {activeTab === 'tax' && (
-                <div className="space-y-6 relative z-10">
-                  <div className="flex items-center gap-2 text-[#C9A96E] text-xs font-bold uppercase tracking-widest">
-                    <Calculator className="w-4 h-4" />
-                    <span>Resumen de Escudo Fiscal</span>
-                  </div>
-                  <div className="space-y-4 pt-4">
-                    <div className="flex justify-between text-xs text-white/70">
-                      <span>Límite Legal Exento</span>
-                      <span className="font-bold text-white">{taxCalc.optimalDays} días seguros</span>
+                {activeTab === 'tax' && (
+                  <motion.div 
+                    key="tax-res"
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    exit={{ opacity: 0 }}
+                    className="space-y-6 relative z-10"
+                  >
+                    <div className="flex items-center gap-2 text-[#C9A96E] text-xs font-bold uppercase tracking-widest">
+                      <Calculator className="w-4 h-4" />
+                      <span>Resumen de Escudo Fiscal</span>
                     </div>
-                    <div className="flex justify-between text-xs text-white/70">
-                      <span>Ahorros Fiscales Proyectados</span>
-                      <span className="font-bold text-[#C9A96E]">~€{taxCalc.potentialSavings}</span>
+                    <div className="space-y-4 pt-4">
+                      <div className="flex justify-between text-xs text-white/70">
+                        <span>Límite Legal Exento</span>
+                        <span className="font-bold text-white">{taxCalc.optimalDays} días seguros</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-white/70">
+                        <span>Ahorros Fiscales Proyectados</span>
+                        <span className="font-bold text-[#C9A96E]">~€{taxCalc.potentialSavings}</span>
+                      </div>
+                      <div className="border-t border-white/10 pt-4">
+                        <span className="text-[10px] text-white/40 block flex items-center gap-1 uppercase tracking-wider">
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-500" /> Riesgo de Penalización
+                        </span>
+                        <span className="text-xl font-bold text-rose-400 mt-1 block">€{taxCalc.penaltyRisk}</span>
+                      </div>
                     </div>
-                    <div className="border-t border-white/10 pt-4">
-                      <span className="text-[10px] text-white/40 block flex items-center gap-1 uppercase tracking-wider">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500" /> Riesgo de Penalización
-                      </span>
-                      <span className="text-xl font-bold text-rose-400 mt-1 block">€{taxCalc.penaltyRisk}</span>
-                    </div>
-                  </div>
-                  <a href="#contacto" className="w-full bg-[#C9A96E] hover:bg-white text-black font-bold py-4 rounded-sm block text-center text-xs uppercase tracking-widest transition-all duration-300 mt-8">
-                    Solicitar Gestión
-                  </a>
-                </div>
-              )}
+                    <a href="#contacto" className="w-full bg-[#C9A96E] hover:bg-white text-black font-bold py-4 rounded-sm block text-center text-xs uppercase tracking-widest transition-all duration-300 mt-8 shadow-md">
+                      Solicitar Gestión
+                    </a>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
@@ -593,40 +689,55 @@ const App = () => {
           <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
             <span className="text-[10px] tracking-[0.35em] text-[#C9A96E] uppercase font-bold block">OPORTUNIDADES CLAVE</span>
             <h2 className="text-3xl md:text-5xl font-serif text-[#0A1628]">Estrategia y Modelos de Monetización</h2>
-            <div className="w-12 h-0.5 bg-[#C9A96E] mx-auto mt-4"></div>
+            <div className="w-12 h-0.5 bg-[#C9A96E] mx-auto mt-4" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {cnsOpportunities.map((op, idx) => (
-              <div key={idx} className="p-8 border border-[#E0E0E0] rounded-sm bg-[#f9f9f9] hover:border-[#C9A96E]/50 transition-all duration-300">
+              <motion.div 
+                key={idx} 
+                whileHover={{ y: -4, borderColor: '#C9A96E' }}
+                transition={{ duration: 0.3 }}
+                className="p-8 border border-[#E0E0E0] rounded-sm bg-[#f9f9f9] transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
+              >
                 <span className="font-mono text-[#C9A96E] text-xs font-bold block mb-2">0{idx + 1}</span>
                 <h4 className="font-serif font-bold text-xl text-[#0A1628] mb-3">{op.title}</h4>
                 <p className="text-sm text-[#4A4A4A] leading-relaxed font-light">{op.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
 
-          {/* Infographic Strategy Map (Bespoke SVG structure) */}
-          <div className="mt-20 border border-[#C9A96E]/30 bg-[#F7F3EB]/30 p-8 rounded-sm text-center">
-            <h4 className="font-serif font-bold text-xl text-[#0A1628] mb-6">Mapa Estratégico de Arbitraje Local (Gran Ducado)</h4>
-            <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-12 py-6">
-              <div className="flex flex-col items-center p-5 bg-white border border-[#E0E0E0] rounded-sm shadow-sm max-w-[220px]">
+          {/* Infographic Strategy Map */}
+          <div className="mt-20 border border-[#C9A96E]/30 bg-[#F7F3EB]/30 p-8 rounded-sm text-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-radial-spotlight opacity-50 pointer-events-none" />
+            <h4 className="font-serif font-bold text-xl text-[#0A1628] mb-6 relative z-10">Mapa Estratégico de Arbitraje Local (Gran Ducado)</h4>
+            <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-12 py-6 relative z-10">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="flex flex-col items-center p-5 bg-white border border-[#E0E0E0] rounded-sm shadow-sm max-w-[220px] transition-all duration-300"
+              >
                 <Globe className="w-6 h-6 text-[#C9A96E] mb-3" />
                 <span className="text-xs font-bold uppercase tracking-wider text-[#0A1628]">1. Portal MyGuichet</span>
                 <p className="text-[10px] text-[#4A4A4A] mt-2 font-light">Punto de acceso seguro y autenticación con firma LuxTrust.</p>
-              </div>
-              <div className="w-px h-8 md:w-12 md:h-px bg-[#C9A96E]/50"></div>
-              <div className="flex flex-col items-center p-5 bg-[#0A1628] text-white border border-[#C9A96E]/30 rounded-sm shadow-sm max-w-[220px]">
+              </motion.div>
+              <div className="w-px h-8 md:w-12 md:h-px bg-[#C9A96E]/50" />
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="flex flex-col items-center p-5 bg-[#0A1628] text-white border border-[#C9A96E]/30 rounded-sm shadow-sm max-w-[220px] transition-all duration-300"
+              >
                 <Layers className="w-6 h-6 text-[#C9A96E] mb-3" />
                 <span className="text-xs font-bold uppercase tracking-wider text-white">2. Engine MyTramits</span>
                 <p className="text-[10px] text-white/70 mt-2 font-light">Automatización, extracción por IA y estructuración de dossiers.</p>
-              </div>
-              <div className="w-px h-8 md:w-12 md:h-px bg-[#C9A96E]/50"></div>
-              <div className="flex flex-col items-center p-5 bg-white border border-[#E0E0E0] rounded-sm shadow-sm max-w-[220px]">
+              </motion.div>
+              <div className="w-px h-8 md:w-12 md:h-px bg-[#C9A96E]/50" />
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="flex flex-col items-center p-5 bg-white border border-[#E0E0E0] rounded-sm shadow-sm max-w-[220px] transition-all duration-300"
+              >
                 <Building className="w-6 h-6 text-[#C9A96E] mb-3" />
                 <span className="text-xs font-bold uppercase tracking-wider text-[#0A1628]">3. Organismos Públicos</span>
                 <p className="text-[10px] text-[#4A4A4A] mt-2 font-light">Reembolsos CNS expedítivos y obtención de subvenciones PyME.</p>
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>
@@ -642,7 +753,10 @@ const App = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {/* Plan 1 */}
-            <div className="bg-white p-12 border border-[#E0E0E0] hover:shadow-xl transition-all rounded-sm flex flex-col justify-between">
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="bg-white p-12 border border-[#E0E0E0] shadow-sm hover:shadow-xl transition-all rounded-sm flex flex-col justify-between"
+            >
               <div>
                 <h4 className="font-bold text-[10px] text-[#C9A96E] uppercase tracking-[0.18em] mb-6">CONSULTA PUNTUAL</h4>
                 <div className="flex items-baseline gap-2 mb-8">
@@ -662,9 +776,13 @@ const App = () => {
                 </ul>
               </div>
               <a href="#contacto" className="w-full border border-[#0A1628] py-4 text-center font-bold text-[11px] uppercase tracking-widest text-[#0A1628] hover:bg-[#0A1628] hover:text-white transition-all rounded-sm">Agendar Sesión</a>
-            </div>
+            </motion.div>
+            
             {/* Plan 2 */}
-            <div className="bg-[#0A1628] p-12 text-white shadow-xl rounded-sm relative flex flex-col justify-between">
+            <motion.div 
+              whileHover={{ scale: 1.02, y: -5 }}
+              className="bg-[#0A1628] p-12 text-white shadow-xl hover:shadow-2xl transition-all rounded-sm relative flex flex-col justify-between border border-[#C9A96E]/20"
+            >
               <div className="absolute top-0 right-0 bg-[#C9A96E] text-white font-bold text-[9px] px-5 py-2 uppercase tracking-widest">Recomendado</div>
               <div>
                 <h4 className="font-bold text-[10px] text-[#C9A96E] uppercase tracking-[0.18em] mb-6">GESTIÓN COMPLETA</h4>
@@ -687,10 +805,14 @@ const App = () => {
                   </li>
                 </ul>
               </div>
-              <a href="#contacto" className="w-full bg-[#C9A96E] hover:brightness-110 py-4 text-center font-bold text-[11px] uppercase tracking-widest text-white transition-all rounded-sm">Solicitar Trámite</a>
-            </div>
+              <a href="#contacto" className="w-full bg-[#C9A96E] hover:brightness-110 py-4 text-center font-bold text-[11px] uppercase tracking-widest text-white transition-all rounded-sm shadow-md">Solicitar Trámite</a>
+            </motion.div>
+            
             {/* Plan 3 */}
-            <div className="bg-white p-12 border border-[#E0E0E0] hover:shadow-xl transition-all rounded-sm flex flex-col justify-between">
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="bg-white p-12 border border-[#E0E0E0] shadow-sm hover:shadow-xl transition-all rounded-sm flex flex-col justify-between"
+            >
               <div>
                 <h4 className="font-bold text-[10px] text-[#C9A96E] uppercase tracking-[0.18em] mb-6">PLAN MENSUAL B2B</h4>
                 <div className="flex items-baseline gap-2 mb-8">
@@ -710,7 +832,7 @@ const App = () => {
                 </ul>
               </div>
               <a href="#contacto" className="w-full border border-[#0A1628] py-4 text-center font-bold text-[11px] uppercase tracking-widest text-[#0A1628] hover:bg-[#0A1628] hover:text-white transition-all rounded-sm">Contratar Plan</a>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -736,7 +858,7 @@ const App = () => {
 
       {/* Institutional Contact Form */}
       <section className="py-28 bg-[#0A1628] text-white relative overflow-hidden" id="contacto">
-        <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#C9A96E 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+        <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#C9A96E 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="max-w-[1200px] mx-auto px-6 md:px-16 relative z-10">
           <div className="grid md:grid-cols-2 gap-16">
             <div>
@@ -821,7 +943,7 @@ const App = () => {
                         value={formState.details}
                         onChange={(e) => setFormState({ ...formState, details: e.target.value })}
                         className="w-full bg-transparent border-none p-0 text-sm focus:ring-0 outline-none resize-none text-[#0A1628]"
-                      ></textarea>
+                      />
                     </div>
 
                     <button 
@@ -876,7 +998,7 @@ const App = () => {
             <ul className="space-y-3 text-xs text-[#4A4A4A] font-medium">
               <li><a href="#" className="hover:text-[#C9A96E] transition-colors">Rigor e Integridad</a></li>
               <li><a href="#" className="hover:text-[#C9A96E] transition-colors">Normativa Local</a></li>
-              <li><a href="#" className="hover:text-[#C9A96E] transition-colors">Seguridad de Datos</a></li>
+              <li><a href="#" className="hover:text-[#C9A96E] transition-colors">Security de Datos</a></li>
             </ul>
           </div>
           <div>
@@ -923,16 +1045,37 @@ const App = () => {
 
                 <div className="bg-[#F7F3EB] p-4 border border-[#C9A96E]/20 rounded-sm">
                   <span className="text-[10px] uppercase tracking-wider font-bold text-[#C9A96E] block mb-1">Nota del General en Jefe</span>
-                  <p className="text-[11px] text-[#0A1628] leading-relaxed font-light">
-                    Asere, aquí te desglosamos la jugada real de MyGuichet sin rodeos burocráticos. La pura verdad de Luxemburgo explicada de tú a tú.
+                  <p className="text-[11px] text-[#0A1628] leading-relaxed font-light font-sans">
+                    Asere, toca en cada caso para ver la jugada completa detallada con toda la sandunga y el rigor cubano.
                   </p>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {cubanCases.map((c, idx) => (
-                    <div key={idx} className="border-b border-[#E0E0E0] pb-4 space-y-2">
-                      <span className="font-mono text-[10px] font-bold text-[#C9A96E] uppercase tracking-wider">Caso {c.num}: {c.title}</span>
-                      <p className="text-xs text-[#4A4A4A] leading-relaxed font-light">{c.desc}</p>
+                    <div key={idx} className="border border-[#E0E0E0] rounded-sm p-4 cursor-pointer hover:border-[#C9A96E]/50 transition-all bg-[#f9f9f9]" onClick={() => setActiveCase(activeCase === idx ? null : idx)}>
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-xs uppercase tracking-wider text-[#0A1628] flex items-center gap-2">
+                          <span className="font-mono text-[#C9A96E] font-bold">0{idx + 1}</span> {c.title}
+                        </span>
+                        <motion.span 
+                          animate={{ rotate: activeCase === idx ? 90 : 0 }}
+                          className="text-xs text-[#C9A96E] font-bold"
+                        >
+                          <ArrowRight size={14} />
+                        </motion.span>
+                      </div>
+                      <AnimatePresence>
+                        {activeCase === idx && (
+                          <motion.p 
+                            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                            animate={{ height: 'auto', opacity: 1, marginTop: 8 }}
+                            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                            className="text-xs text-[#4A4A4A] leading-relaxed font-light font-sans"
+                          >
+                            {c.desc}
+                          </motion.p>
+                        )}
+                      </AnimatePresence>
                     </div>
                   ))}
                 </div>
@@ -941,7 +1084,7 @@ const App = () => {
               <div className="pt-8 mt-8 border-t border-[#E0E0E0]">
                 <button 
                   onClick={() => setCubanDrawerOpen(false)}
-                  className="w-full bg-[#0A1628] text-white hover:bg-[#C9A96E] font-bold py-4 rounded-sm text-xs uppercase tracking-widest transition-all duration-300"
+                  className="w-full bg-[#0A1628] text-white hover:bg-[#C9A96E] font-bold py-4 rounded-sm text-xs uppercase tracking-widest transition-all duration-300 shadow-md"
                 >
                   Entendido, asere
                 </button>
