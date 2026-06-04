@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap');
+
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #080d15;
+    color: #f1f5f9;
+    font-family: 'Manrope', sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+/* Luxury Dark Glow & Glassmorphism Design Tokens */
+.glass-panel {
+  background: rgba(10, 22, 40, 0.45);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(201, 169, 110, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.glass-nav {
+  background: rgba(8, 13, 21, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(201, 169, 110, 0.15);
+}
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, #f3e5ab 0%, #c9a96e 50%, #b48c48 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glow-card {
+  position: relative;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glow-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  box-shadow: 0 0 30px rgba(201, 169, 110, 0.25);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.glow-card:hover::after {
+  opacity: 1;
+}
+
+.glow-card:hover {
+  border-color: rgba(201, 169, 110, 0.45);
+}
+
+/* Custom interactive transitions */
+.interactive-trigger {
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Soft ambient lighting */
+.radial-spotlight {
+  background: radial-gradient(circle at 50% 50%, rgba(201, 169, 110, 0.08) 0%, transparent 65%);
+}
